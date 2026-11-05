@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalmaTIC - Premium</title>
+    <!-- Fuentes e Iconos -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Confeti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        :root {
+            /* Tema Claro */
+            --bg: #f4f7f6;
+            --surface: rgba(255, 255, 255, 0.85);
+            --text-main: #2d3436;
+            --text-light: #636e72;
+            --primary: #6c5ce7;
+            --primary-light: #a29bfe;
+            --accent: #00b894;
+            --danger: #ff7675;
+            --shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            --border: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            /* Tema Oscuro */
+            --bg: #121212;
+            --surface: rgba(30, 30, 30, 0.85);
+            --text-main: #f5f6fa;
+            --text-light: #b2bec3;
+            --primary: #a29bfe;
+            --primary-light: #6c5ce7;
+            --accent: #55efc4;
+            --danger: #ff7675;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Contenedor App Móvil */
+        .app-container {
+            width: 100%; max-width: 420px; height: 92vh; max-height: 850px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 35px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* Botón Modo Oscuro */
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px; z-index: 100;
+            background: var(--surface); border: 1px solid var(--border);
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-main);
+            box-shadow: var(--shadow); transition: 0.3s;
+        }
+
+        main { flex: 1; overflow-y: auto; padding-bottom: 90px; scroll-behavior: smooth; }
+        main::-webkit-scrollbar { display: none; }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cabeceras con Imagen */
+        .hero-header {
+            height: 180px; background-size: cover; background-position: center;
+            position: relative; border-radius: 0 0 30px 30px; margin-bottom: 20px;
+        }
+        .hero-overlay {
+            position: absolute; inset: 0; border-radius: 0 0 30px 30px;
+            background: linear-gradient(to bottom, transparent, var(--bg));
+        }
+        .hero-text { position: absolute; bottom: 15px; left: 20px; z-index: 2; }
+        .hero-text h1 { font-size: 24px; font-weight: 700; color: var(--text-main); }
+        .hero-text p { font-size: 13px; color: var(--text-light); }
+
+        /* Tarjetas */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 20px; margin: 0 20px 15px;
+            box-shadow: var(--shadow); transition: 0.3s;
+        }
+
+        /* Formularios y Botones */
+        input, select {
+            width: 100%; padding: 12px 15px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--bg);
+            color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 10px;
+        }
+        button.primary-btn {
+            width: 100%; padding: 14px; border-radius: 12px; border: none;
+            background: var(--primary); color: white; font-weight: 600;
+            cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        button.primary-btn:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+        /* Planificador */
+        .task-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; background: var(--bg); border-radius: 15px; margin-bottom: 10px;
+            border-left: 5px solid var(--primary); transition: 0.3s;
+        }
+        .task-item.completed { opacity: 0.6; border-left-color: var(--accent); text-decoration: line-through; }
+        .task-check { cursor: pointer; font-size: 20px; color: var(--text-light); }
+        .task-item.completed .task-check { color: var(--accent); }
+        .delete-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; }
+
+        /* Pomodoro */
+        .pomodoro-circle {
+            width: 180px; height: 180px; border-radius: 50%; margin: 20px auto;
+            border: 8px solid var(--primary-light); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; position: relative;
+            box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
+        }
+        .pomodoro-time { font-size: 36px; font-weight: 700; color: var(--text-main); }
+        .pomodoro-label { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+        .pomodoro-controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .pomo-btn { padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; }
+        .pomo-start { background: var(--primary); color: white; }
+        .pomo-reset { background: var(--bg); color: var(--text-main); border: 1px solid var(--border); }
+
+        /* Flashcards */
+        .flashcard-container { perspective: 1000px; height: 200px; margin-bottom: 15px; cursor: pointer; }
+        .flashcard {
+            width: 100%; height: 100%; position: relative;
+            transition: transform 0.6s; transform-style: preserve-3d;
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back {
+            width: 100%; height: 100%; position: absolute; backface-visibility: hidden;
+            border-radius: 20px; padding: 20px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; box-shadow: var(--shadow);
+        }
+        .flashcard-front { background: var(--surface); border: 2px dashed var(--primary); }
+        .flashcard-back { background: var(--primary); color: white; transform: rotateY(180deg); }
+
+        /* Calma */
+        .calm-container {
+            height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+            background-size: cover; background-position: center; border-radius: 0 0 30px 30px; position: relative;
+        }
+        .calm-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); border-radius: 0 0 30px 30px; }
+        .breathing-circle {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); box-shadow: 0 0 40px rgba(255,255,255,0.6);
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+            transition: transform 4s ease-in-out; z-index: 2;
+        }
+        .breathing-circle.inhale { transform: scale(1.6); }
+        .breathing-circle.exhale { transform: scale(1); }
+        .calm-text { color: white; font-size: 22px; margin-top: 40px; z-index: 2; font-weight: 600; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        
+        /* Progreso */
+        .progress-bar-container { width: 100%; height: 10px; background: var(--bg); border-radius: 10px; margin: 5px 0 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary-light), var(--primary)); border-radius: 10px; transition: width 1s; }
+        .mood-selector { display: flex; justify-content: space-around; margin-top: 10px; }
+        .mood-btn { font-size: 28px; background: none; border: none; cursor: pointer; transition: 0.3s; filter: grayscale(100%); }
+        .mood-btn.active { filter: grayscale(0%); transform: scale(1.2); }
+
+        /* Navegación */
+        nav {
+            position: absolute; bottom: 0; width: 100%; display: flex; justify-content: space-around;
+            padding: 15px 5px; background: var(--surface); backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border); border-radius: 0 0 35px 35px; z-index: 100;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 11px; gap: 4px; transition: 0.3s; }
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Botón Modo Oscuro -->
+    <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+
+    <main>
+        <!-- 1. INICIO -->
+        <section id="inicio" class="tab-content active">
+            <div class="hero-header" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');">
+                <div class="hero-overlay"></div>
+                <div class="hero-text">
+                    <h1 id="greeting">Hola, Estudiante</h1>
+                    <p>Tu espacio de calma y enfoque</p>
+                </div>
+            </div>
+            <div class="card" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; border: none;">
+                <p style="font-size: 14px; font-style: italic;">"El éxito es la suma de pequeños esfuerzos repetidos día tras día."</p>
+            </div>
+            <div class="card" style="display: flex; justify-content: space-between; text-align: center;">
+                <div>
+                    <h3 style="color: var(--primary); font-size: 24px;" id="stat-tasks">0</h3>
+                    <p style="font-size: 12px; color: var(--text-light);">Tareas pendientes</p>
+                </div>
+                <div style="width: 1px; background: var(--border);"></div>
+                <div>
+                    <h3 style="color: var(--accent); font-size: 24px;" id="stat-pomos">0</h3>
+                    <p style="font-size: 12px; color: var(--text-light);">Pomodoros hoy</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. PLANIFICADOR -->
+        <section id="planificador" class="tab-content">
+            <div class="card">
+                <h2 style="font-size: 20px; margin-bottom: 15px;">Planificador</h2>
+                <input type="text" id="task-input" placeholder="¿Qué debes estudiar hoy?">
+                <select id="task-priority">
+                    <option value="high">🔴 Prioridad Alta</option>
+                    <option value="medium" selected>🟡 Prioridad Media</option>
+                    <option value="low">🟢 Prioridad Baja</option>
+                </select>
+                <button class="primary-btn" onclick="addTask()"><i class="fa-solid fa-plus"></i> Agregar Tarea</button>
+            </div>
+            <div class="card" id="task-list-container">
+                <!-- Las tareas se cargan aquí -->
+            </div>
+        </section>
+
+        <!-- 3. ENFOQUE (POMODORO) -->
+        <section id="enfoque" class="tab-content">
+            <div class="card" style="text-align: center;">
+                <h2 style="font-size: 20px; margin-bottom: 10px;">Modo Enfoque</h2>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 20px;">Técnica Pomodoro: 25 min de estudio, 5 de descanso.</p>
+                <div class="pomodoro-circle">
+                    <span class="pomodoro-time" id="pomo-time">25:00</span>
+                    <span class="pomodoro-label" id="pomo-label">Estudio</span>
+                </div>
+                <div class="pomodoro-controls">
+                    <button class="pomo-btn pomo-start" id="pomo-start-btn" onclick="togglePomodoro()">Iniciar</button>
+                    <button class="pomo-btn pomo-reset" onclick="resetPomodoro()">Reiniciar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PRÁCTICA (FLASHCARDS) -->
+        <section id="practica" class="tab-content">
+            <div class="card">
+                <h2 style="font-size: 20px; margin-bottom: 5px;">Flashcards</h2>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 15px;">Toca la tarjeta para voltearla.</p>
+                
+                <div class="flashcard-container" onclick="flipCard(this)">
+                    <div class="flashcard">
+                        <div class="flashcard-front">
+                            <i class="fa-solid fa-question" style="font-size: 30px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <h3>¿Qué es el repaso espaciado?</h3>
+                        </div>
+                        <div class="flashcard-back">
+                            <p>Es una técnica de estudio que consiste en repasar el material en intervalos de tiempo cada vez mayores para combatir la curva del olvido.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flashcard-container" onclick="flipCard(this)">
+                    <div class="flashcard">
+                        <div class="flashcard-front">
+                            <i class="fa-solid fa-question" style="font-size: 30px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <h3>¿Qué es la técnica Pomodoro?</h3>
+                        </div>
+                        <div class="flashcard-back">
+                            <p>Un método de gestión del tiempo que divide el trabajo en intervalos de 25 minutos (pomodoros) separados por breves descansos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. CALMA -->
+        <section id="calma" class="tab-content" style="height: 100%;">
+            <div class="calm-container">
+                <div class="calm-overlay"></div>
+                <div class="breathing-circle" id="breathing-circle">
+                    <i class="fa-solid fa-leaf" style="color: var(--accent);"></i>
+                </div>
+                <div class="calm-text" id="calm-text">Respira profundo</div>
+                <button class="primary-btn" style="width: auto; padding: 12px 30px; margin-top: 30px; z-index: 2;" onclick="startBreathing()">Comenzar</button>
+            </div>
+        </section>
+
+        <!-- 6. PROGRESO -->
+        <section id="progreso" class="tab-content">
+            <div class="card">
+                <h2 style="font-size: 20px; margin-bottom: 15px;">Mi Progreso</h2>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <span>Matemáticas</span><span>75%</span>
+                </div>
+                <div class="progress-bar-container"><div class="progress-fill" style="width: 75%;"></div></div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <span>Historia</span><span>40%</span>
+                </div>
+                <div class="progress-bar-container"><div class="progress-fill" style="width: 40%; background: linear-gradient(90deg, #fdcb6e, #ffeaa7);"></div></div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <span>Ciencias</span><span>90%</span>
+                </div>
+                <div class="progress-bar-container"><div class="progress-fill" style="width: 90%; background: linear-gradient(90deg, #00b894, #55efc4);"></div></div>
+            </div>
+
+            <div class="card" style="text-align: center;">
+                <h3 style="font-size: 16px;">¿Cómo te sientes hoy?</h3>
+                <div class="mood-selector">
+                    <button class="mood-btn" onclick="setMood(this)">😫</button>
+                    <button class="mood-btn" onclick="setMood(this)">😐</button>
+                    <button class="mood-btn" onclick="setMood(this)">🙂</button>
+                    <button class="mood-btn" onclick="setMood(this)">🤩</button>
+                </div>
+                <p id="mood-feedback" style="margin-top: 15px; font-size: 14px; color: var(--primary); font-weight: 500;"></p>
+            </div>
+        </section>
+    </main>
+
+    <!-- NAVEGACIÓN (6 Pestañas) -->
+    <nav>
+        <button class="nav-item active" onclick="switchTab('inicio', this)"><i class="fa-solid fa-house"></i>Inicio</button>
+        <button class="nav-item" onclick="switchTab('planificador', this)"><i class="fa-solid fa-list-check"></i>Plan</button>
+        <button class="nav-item" onclick="switchTab('enfoque', this)"><i class="fa-solid fa-clock"></i>Enfoque</button>
+        <button class="nav-item" onclick="switchTab('practica', this)"><i class="fa-solid fa-layer-group"></i>Práctica</button>
+        <button class="nav-item" onclick="switchTab('calma', this)"><i class="fa-solid fa-spa"></i>Calma</button>
+        <button class="nav-item" onclick="switchTab('progreso', this)"><i class="fa-solid fa-chart-pie"></i>Progreso</button>
+    </nav>
+</div>
+
+<script>
+    /* --- SALUDO Y MODO OSCURO --- */
+    const hour = new Date().getHours();
+    document.getElementById('greeting').innerText = hour < 12 ? 'Buenos días, Estudiante' : hour < 19 ? 'Buenas tardes, Estudiante' : 'Buenas noches, Estudiante';
+
+    function toggleTheme() {
+        const body = document.body;
+        const icon = document.getElementById('theme-icon');
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            icon.className = 'fa-solid fa-moon';
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'fa-solid fa-sun';
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+    if (localStorage.getItem('theme') === 'dark') toggleTheme();
+
+    /* --- NAVEGACIÓN --- */
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btnElement.classList.add('active');
+        if(tabId !== 'calma') clearInterval(breathingInterval);
+        if(tabId !== 'enfoque') clearInterval(pomodoroInterval);
+    }
+
+    /* --- PLANIFICADOR CON CONFETI --- */
+    let tasks = JSON.parse(localStorage.getItem('calmatic-tasks-v2')) || [];
+    
+    function renderTasks() {
+        const container = document.getElementById('task-list-container');
+        container.innerHTML = tasks.length ? '' : '<p style="text-align:center; color:var(--text-light); font-size:14px;">No hay tareas pendientes. ¡A descansar!</p>';
+        let pending = 0;
+        
+        tasks.forEach(task => {
+            if(!task.completed) pending++;
+            const colors = { high: '#ff7675', medium: '#fdcb6e', low: '#00b894' };
+            const div = document.createElement('div');
+            div.className = `task-item ${task.completed ? 'completed' : ''}`;
+            div.style.borderLeftColor = colors[task.priority];
+            div.innerHTML = `
+                <div style="display: flex; gap: 10px; align-items: center;" onclick="toggleTask(${task.id})">
+                    <i class="fa-regular fa-circle task-check" style="${task.completed ? 'display:none' : ''}"></i>
+                    <i class="fa-solid fa-circle-check task-check" style="${task.completed ? '' : 'display:none'}"></i>
+                    <span style="font-size: 14px;">${task.text}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteTask(${task.id})"><i class="fa-solid fa-trash"></i></button>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('stat-tasks').innerText = pending;
+        localStorage.setItem('calmatic-tasks-v2', JSON.stringify(tasks));
+    }
+
+    function addTask() {
+        const input = document.getElementById('task-input');
+        const priority = document.getElementById('task-priority').value;
+        if(input.value.trim()) {
+            tasks.push({ id: Date.now(), text: input.value.trim(), completed: false, priority });
+            input.value = '';
+            renderTasks();
+        }
+    }
+
+    function toggleTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if(task) {
+            task.completed = !task.completed;
+            if(task.completed) confetti({ particleCount: 80, spread: 60, origin: { y: 0.8 }, colors: ['#6c5ce7', '#00b894', '#fdcb6e'] });
+            renderTasks();
+        }
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        renderTasks();
+    }
+    renderTasks();
+
+    /* --- POMODORO --- */
+    let pomodoroTime = 25 * 60;
+    let pomodoroInterval = null;
+    let isStudyTime = true;
+    let pomosCompleted = parseInt(localStorage.getItem('pomos')) || 0;
+    document.getElementById('stat-pomos').innerText = pomosCompleted;
+
+    function updatePomoDisplay() {
+        const m = Math.floor(pomodoroTime / 60).toString().padStart(2, '0');
+        const s = (pomodoroTime % 60).toString().padStart(2, '0');
+        document.getElementById('pomo-time').innerText = `${m}:${s}`;
+    }
+
+    function togglePomodoro() {
+        const btn = document.getElementById('pomo-start-btn');
+        if(pomodoroInterval) {
+            clearInterval(pomodoroInterval);
+            pomodoroInterval = null;
+            btn.innerText = 'Reanudar';
+        } else {
+            btn.innerText = 'Pausar';
+            pomodoroInterval = setInterval(() => {
+                pomodoroTime--;
+                updatePomoDisplay();
+                if(pomodoroTime <= 0) {
+                    clearInterval(pomodoroInterval);
+                    pomodoroInterval = null;
+                    if(isStudyTime) {
+                        pomosCompleted++;
+                        localStorage.setItem('pomos', pomosCompleted);
+                        document.getElementById('stat-pomos').innerText = pomosCompleted;
+                        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                        alert('¡Tiempo de estudio terminado! Tómate 5 minutos de descanso.');
+                        pomodoroTime = 5 * 60;
+                        isStudyTime = false;
+                        document.getElementById('pomo-label').innerText = 'Descanso';
+                    } else {
+                        alert('¡Descanso terminado! A estudiar de nuevo.');
+                        pomodoroTime = 25 * 60;
+                        isStudyTime = true;
+                        document.getElementById('pomo-label').innerText = 'Estudio';
+                    }
+                    btn.innerText = 'Iniciar';
+                    updatePomoDisplay();
+                }
+            }, 1000);
+        }
+    }
+
+    function resetPomodoro() {
+        clearInterval(pomodoroInterval);
+        pomodoroInterval = null;
+        pomodoroTime = 25 * 60;
+        isStudyTime = true;
+        document.getElementById('pomo-start-btn').innerText = 'Iniciar';
+        document.getElementById('pomo-label').innerText = 'Estudio';
+        updatePomoDisplay();
+    }
+    updatePomoDisplay();
+
+    /* --- FLASHCARDS --- */
+    function flipCard(container) {
+        container.querySelector('.flashcard').classList.toggle('flipped');
+    }
+
+    /* --- CALMA (RESPIRACIÓN) --- */
+    let breathingInterval;
+    let isInhaling = true;
+
+    function startBreathing() {
+        clearInterval(breathingInterval);
+        const circle = document.getElementById('breathing-circle');
+        const text = document.getElementById('calm-text');
+        circle.className = "breathing-circle";
+        
+        setTimeout(() => {
+            circle.classList.add('inhale');
+            text.innerText = "Inhala...";
+            isInhaling = true;
+            breathingInterval = setInterval(() => {
+                if(isInhaling) {
+                    circle.className = "breathing-circle exhale";
+                    text.innerText = "Exhala...";
+                    isInhaling = false;
+                } else {
+                    circle.className = "breathing-circle inhale";
+                    text.innerText = "Inhala...";
+                    isInhaling = true;
+                }
+            }, 4000);
+        }, 1000);
+    }
+
+    /* --- PROGRESO (MOOD) --- */
+    function setMood(btn) {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const feedback = document.getElementById('mood-feedback');
+        if(btn.innerText === '😫') feedback.innerText = "Tómate un respiro, mañana será un gran día.";
+        if(btn.innerText === '😐') feedback.innerText = "La constancia es clave. ¡Sigue avanzando!";
+        if(btn.innerText === '🙂') feedback.innerText = "¡Buen trabajo! Estás en el camino correcto.";
+        if(btn.innerText === '🤩') feedback.innerText = "¡Increíble! Estás imparable hoy.";
+    }
+</script>
+</body>
+</html>
